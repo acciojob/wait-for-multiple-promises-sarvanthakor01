@@ -1,41 +1,30 @@
 //your JS code here. If required.
-document.addEventListener("DOMContentLoaded", () => {
-    const output = document.getElementById("output");
+const output = document.getElementById("output");
 
-    // Initially, add the loading row
-    const loadingRow = document.createElement("tr");
-    loadingRow.innerHTML = `<td colspan="2" class="text-center">Loading...</td>`;
-    output.appendChild(loadingRow);
+// Ensure loading message appears before promises execute
+output.innerHTML = `<tr id="loading"><td colspan="2">Loading...</td></tr>`;
 
-    // Function to create a promise that resolves after a random delay (1-3 seconds)
-    const createPromise = (id) => {
-        const delay = Math.random() * 2 + 1; // Random delay between 1 and 3 seconds
-        return new Promise((resolve) => {
-            setTimeout(() => resolve({ id, time: delay.toFixed(3) }), delay * 1000);
-        });
-    };
+// Function to generate a random delay between 1 to 3 seconds
+const randomDelay = () => Math.floor(Math.random() * 2000) + 1000; 
 
-    // Create three promises
-    const promises = [createPromise(1), createPromise(2), createPromise(3)];
+// Create 3 promises with different delays
+const promises = [1, 2, 3].map((num) =>
+  new Promise((resolve) => {
+    const delay = randomDelay();
+    setTimeout(() => resolve({ name: `Promise ${num}`, time: (delay / 1000).toFixed(3) }), delay);
+  })
+);
 
-    // Wait for all promises to resolve
-    Promise.all(promises).then((results) => {
-        // Remove loading row
-        output.innerHTML = "";
+// Execute all promises in parallel and update the table once they resolve
+Promise.all(promises).then((results) => {
+  output.innerHTML = ""; // Remove loading row
 
-        // Append resolved promise results to the table
-        results.forEach((result) => {
-            const row = document.createElement("tr");
-            row.innerHTML = `<td>Promise ${result.id}</td><td>${result.time}</td>`;
-            output.appendChild(row);
-        });
+  results.forEach(({ name, time }) => {
+    const row = `<tr><td>${name}</td><td>${time}</td></tr>`;
+    output.innerHTML += row;
+  });
 
-        // Calculate the total time (maximum time taken)
-        const totalTime = Math.max(...results.map((res) => parseFloat(res.time)));
-
-        // Append the total time row
-        const totalRow = document.createElement("tr");
-        totalRow.innerHTML = `<td><strong>Total</strong></td><td><strong>${totalTime.toFixed(3)}</strong></td>`;
-        output.appendChild(totalRow);
-    });
+  // Calculate and display the total time taken (longest resolving promise)
+  const total = Math.max(...results.map((res) => parseFloat(res.time))).toFixed(3);
+  output.innerHTML += `<tr><td>Total</td><td>${total}</td></tr>`;
 });
